@@ -7,6 +7,8 @@ tagline: PNG encoding & decoding
 
 [lodepng](https://github.com/lvandeve/lodepng) (C Build)
 
+__Note__: After build library to "so" files, copy them to /usr/lib
+
 ## `local pngquant = require('resty.pngquant.png')`
 
 A ffi binding for the [libimagequant](https://github.com/ImageOptim/libimagequant) with processing PNG image
