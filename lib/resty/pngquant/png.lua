@@ -143,6 +143,7 @@ local function load(data,blobData)
 		raw_rgba_pixels = raw_rgba_pixels[0],
 		width = width[0],
 		height = height[0],
+		stride = width[0] * 4,
 		compress = compress_options,
 		compressed_data = nil,
 	}

@@ -19,8 +19,8 @@ A ffi binding for the [libimagequant](https://github.com/ImageOptim/libimagequan
   * `pngquant.load_blob(blob) -> img:`               open a PNG image from blob binary data for decoding
   * `pngquant.load_from_disk(<string>infile) -> img:`open a PNG image from file on disk for decoding
   * `img.compress.[opt]:`                           set/read option for compress process (must set before run get_blob() for save() function)
-  * `img:get_blob():`                               get JPEG image to binary string after compress
-  * `img:save():`                                   save JPEG image to disk (must set img.compress.outfile)
+  * `img:get_blob():`                               get PNG image to binary string after compress
+  * `img:save():`                                   save PNG image to disk (must set img.compress.outfile)
 ------------------------------------ -----------------------------------------
 
 ### `pngquant.load_blob(blob) -> img`
@@ -31,6 +31,7 @@ The return value is an image object which gives information about the file
 and can be used to load and decode the actual pixels. It has the fields:
 
   * `w`, `h`: width and height of the image.
+  * `stride`: stride number of image
 
 ### `img.compress.[opt]`
 
@@ -79,8 +80,8 @@ local pngquant = require("resty.pngquant.png") -- load library
 local res = ngx.location.capture('/proxy'..ngx.var.request_uri) -- get data from nginx location /proxy by subrequest 
 local img = pngquant.load_blob(res.body) -- create object img
 -- get data from disk
--- local img = pngquant.load_from_disk('/dev/shm/proxy/inputhd.jpg') -- create object img
-local outfile = '/dev/shm/proxy/inputhd_new.jpg' -- declare outfile path
+-- local img = pngquant.load_from_disk('/dev/shm/proxy/inputhd.png') -- create object img
+local outfile = '/dev/shm/proxy/inputhd_new.png' -- declare outfile path
 img.compress.outfile = outfile -- set outfile setting
 img.compress.quality = 50 -- set quality
 img.compress.speed = 9 -- set quality
