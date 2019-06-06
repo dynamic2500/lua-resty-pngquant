@@ -41,7 +41,7 @@ end
 -- input param is output from load()
 local function compress(img)
 	local return_data = ""
-	if (img.compress_data == nil) then
+	if (img.compressed_data == nil) then
 		local attr = libimagequant.liq_attr_create()
 		set_compress_options(attr,img["compress"])
 		local width = img["width"]
@@ -86,9 +86,9 @@ local function compress(img)
 		p = nil
 		ffi.C.free(p)
 		liblodepng.lodepng_state_cleanup(state);
-		img.compress_data = return_data
+		img.compressed_data = return_data
 	else
-		return_data = img.compress_data
+		return_data = img.compressed_data
 	end
 
 	if (img["compress"]["outfile"]) then
