@@ -6,6 +6,19 @@ local ffi = require('ffi')
 local liblodepng = require ("resty.pngquant.liblodepng")
 local libimagequant = require ("resty.pngquant.libimagequant")
 
+local free_t = {} --{free1, ...}
+local function free()
+	if not free_t then return end
+	for i = #free_t, 1, -1 do
+		free_t[i]()
+	end
+	free_t = {}
+end
+
+local function finally(func)
+	table.insert(free_t, func)
+end
+
 local function set_compress_options(attr,options)
 	local optionTable = {
 		max_colors = function (v)
@@ -31,17 +44,16 @@ local function set_compress_options(attr,options)
 
 	for option,values in pairs (options)
 	do
-		if (option) then
+		if (optionTable[option]) then
 			optionTable[option](values)
 		end
 
 	end
 end
-
 -- input param is output from load()
 local function compress(img)
 	local return_data = ""
-	if (img.compressed_data == nil) then
+	if (img.compress_data == nil) then
 		local attr = libimagequant.liq_attr_create()
 		set_compress_options(attr,img["compress"])
 		local width = img["width"]
@@ -82,13 +94,14 @@ local function compress(img)
 		libimagequant.liq_result_destroy(quantization_result[0])
 		libimagequant.liq_image_destroy(input_image);
 		libimagequant.liq_attr_destroy(attr);
-		local p = ffi.gc(raw_8bit_pixels,nil)
-		p = nil
-		ffi.C.free(p)
 		liblodepng.lodepng_state_cleanup(state);
-		img.compressed_data = return_data
+		finally(function()
+			ffi.C.free(output_file_data[0])
+			raw_8bit_pixels = nil
+		end)
+		img.compress_data = return_data
 	else
-		return_data = img.compressed_data
+		return_data = img.compress_data
 	end
 
 	if (img["compress"]["outfile"]) then
@@ -143,12 +156,17 @@ local function load(data,blobData)
 		raw_rgba_pixels = raw_rgba_pixels[0],
 		width = width[0],
 		height = height[0],
-		stride = width[0] * 4,
 		compress = compress_options,
 		compressed_data = nil,
 	}
-	img.save = function () return save(img) end
-	img.get_blob = function() return get_blob(img) end
+	finally(function()
+		img.compressed_data = nil
+		ffi.C.free(img.raw_rgba_pixels)
+	end)
+	
+	img.free = free
+	img.save = save
+	img.get_blob = get_blob
 	return img
 end
 
@@ -159,7 +177,7 @@ end
 local function load_from_disk(infile)
 	return load(infile,false)
 end
-
+_M.compress = compress
 _M.load_blob = load_blob
 _M.load_from_disk = load_from_disk
 return _M
